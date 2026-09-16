@@ -64,7 +64,9 @@ async function createShortLink(env, group, key) {
   const response = await env.SHORTLINK.fetch(`https://share-ledge/api/links/${code}`, {
     method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Token": env.SHORTLINK_ADMIN_TOKEN }, body: JSON.stringify({ target, status: 302 }),
   });
-  return response.ok ? `https://share-ledge.peige880.workers.dev/${code}` : null;
+  // Reusing an existing stable code is successful too: the short-link Worker
+  // reports it as 409 after the first creation, such as on page reload.
+  return response.ok || response.status === 409 ? `https://share-ledge.peige880.workers.dev/${code}` : null;
 }
 
 export default {
