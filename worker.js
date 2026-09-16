@@ -58,7 +58,8 @@ async function access(request, env, groupId) {
 }
 async function createShortLink(env, group, key) {
   if (!env.SHORTLINK || !env.SHORTLINK_ADMIN_TOKEN) return null;
-  const code = crypto.randomUUID().replaceAll("-", "").slice(0, 12);
+  // A stable code lets existing groups recover their short link after a reload.
+  const code = group.id.replaceAll("-", "").slice(0, 12);
   const target = `https://peige880-lab232.github.io/shared-ledger/#${new URLSearchParams({ group: group.id, key, name: group.name })}`;
   const response = await env.SHORTLINK.fetch(`https://share-ledge/api/links/${code}`, {
     method: "POST", headers: { "Content-Type": "application/json", "X-Admin-Token": env.SHORTLINK_ADMIN_TOKEN }, body: JSON.stringify({ target, status: 302 }),
@@ -86,7 +87,7 @@ export default {
       const publicGroup = { id: group.id, name: group.name, people: jsonArray(group.people_json) };
       if (request.method === "GET" && parts.length === 2) {
         const rows = await env.DB.prepare("SELECT * FROM expenses WHERE group_id = ? ORDER BY created_at DESC").bind(group.id).all();
-        return out(request, { group: publicGroup, expenses: rows.results.map(render) });
+        return out(request, { group: publicGroup, expenses: rows.results.map(render), shortUrl: await createShortLink(env, publicGroup, request.headers.get("X-Group-Key")) });
       }
       if (request.method === "POST" && parts[2] === "expenses" && parts.length === 3) {
         const body = await request.json();
