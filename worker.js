@@ -97,9 +97,8 @@ export default {
         const payers = allocations(body.payments, publicGroup.people, "amount");
         const shares = allocations(body.splits, publicGroup.people, "percentage");
         const paidTotal = payers ? round(payers.reduce((total, payer) => total + payer.amount, 0)) : 0;
-        const shareTotal = shares ? round(shares.reduce((total, share) => total + share.percentage, 0)) : 0;
-        if (!item || !Number.isFinite(amount) || amount <= 0 || !payers?.length || !shares?.length || payers.some(payer => payer.amount <= 0) || shares.some(share => share.percentage <= 0) || Math.abs(paidTotal - amount) > 0.01 || Math.abs(shareTotal - 100) > 0.01) {
-          return out(request, { error: "帳目資料不完整，實付合計必須等於總金額，且分攤比例必須合計 100%。" }, 400);
+        if (!item || !Number.isFinite(amount) || amount <= 0 || !payers?.length || !shares?.length || payers.some(payer => payer.amount <= 0) || shares.some(share => share.percentage <= 0) || Math.abs(paidTotal - amount) > 0.01) {
+          return out(request, { error: "帳目資料不完整，實付合計必須等於總金額，且每位分攤成員的比例必須大於 0。" }, 400);
         }
         const id = uid(), created_at = new Date().toISOString();
         const legacyPeople = shares.map(share => share.person);
